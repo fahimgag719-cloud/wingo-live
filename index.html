@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Result Viewer</title>
+
+<style>
+    body{
+        font-family: Arial, sans-serif;
+        background:#111;
+        color:#fff;
+        padding:20px;
+        text-align:center;
+    }
+    .box{
+        background:#222;
+        padding:20px;
+        margin:15px 0;
+        border-radius:10px;
+    }
+    .big{ color:#00eaff; font-size:22px; }
+    .small{ color:#ff0077; font-size:22px; }
+</style>
+</head>
+
+<body>
+
+<h2>🔴 Live Period & Number Monitor</h2>
+
+<div class="box">
+    <h3>Current Period</h3>
+    <div id="period">Loading...</div>
+</div>
+
+<div class="box">
+    <h3>Latest Number</h3>
+    <div id="number">Loading...</div>
+</div>
+
+<div class="box">
+    <h3>Big / Small</h3>
+    <div id="bs_result">Loading...</div>
+</div>
+
+<script>
+const API_URL = "https://api.bdg88zf.com/api/webapi/GetGameIssue";
+
+const REQUEST_DATA = {
+    typeId: 1,
+    language: 0,
+    random: "e7fe6c090da2495ab8290dac551ef1ed",
+    signature: "1F390E2B2D8A55D693E57FD905AE73A7",
+    timestamp: 1723726679
+};
+
+async function loadData(){
+    try{
+        const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(REQUEST_DATA)
+        });
+
+        const data = await res.json();
+
+        if(!data || !data.data){
+            document.getElementById("period").innerText = "No Data";
+            return;
+        }
+
+        const last = data.data;
+
+        const period = last.issueNumber;
+        const number = last.result;
+        const digit = parseInt(number[number.length - 1]);
+
+        document.getElementById("period").innerText = period;
+        document.getElementById("number").innerText = digit;
+
+        if(digit >= 5){
+            document.getElementById("bs_result").innerHTML = `<span class="big">BIG</span>`;
+        } else {
+            document.getElementById("bs_result").innerHTML = `<span class="small">SMALL</span>`;
+        }
+
+    } catch(e){
+        document.getElementById("period").innerText = "Error loading";
+    }
+}
+
+// Auto refresh every 30 seconds
+loadData();
+setInterval(loadData, 30000);
+</script>
+
+</body>
+</html>
