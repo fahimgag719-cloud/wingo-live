@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wingo — Big/Small Live</title>
+<style>
+    body{background:#0d0d12;color:#9fffe0;font-family:Poppins;text-align:center;padding:20px}
+    .box{
+        background:#11141a;padding:25px;margin:20px 0;border-radius:18px;
+        font-size:22px;box-shadow:0 0 25px #0007
+    }
+    .title{font-size:14px;color:#7af5d8;margin-bottom:8px}
+    .value{font-size:36px;color:#fff}
+</style>
+</head>
+<body>
+
+<h1 style="color:#33ffb9;margin-bottom:25px">WINGO LIVE — 30 SEC AUTO</h1>
+
+<div class="box">
+    <div class="title">LATEST PERIOD</div>
+    <div id="period" class="value">--</div>
+</div>
+
+<div class="box">
+    <div class="title">LATEST DIGIT</div>
+    <div id="digit" class="value">--</div>
+</div>
+
+<div class="box">
+    <div class="title">BIG / SMALL</div>
+    <div id="bigSmall" class="value">--</div>
+</div>
+
+<div class="box">
+    <div class="title">NEXT PREDICTION</div>
+    <div id="prediction" class="value">Analyzing...</div>
+</div>
+
+<div class="box">
+    <div class="title">ACCURACY % (Prediction vs Real)</div>
+    <div id="accuracy" class="value">--%</div>
+</div>
+
+<script>
+const API_URL = "https://api.bdg88zf.com/api/webapi/GetGameIssue";
+const REQUEST_DATA = {
+    typeId: 1,
+    language: 0,
+    random: "e7fe6c090da2495ab8290dac551ef1ed",
+    signature: "1F390E2B2D8A55D693E57FD905AE73A7",
+    timestamp: 1723726679
+};
+
+let total = 0, correct = 0;
+let lastPrediction = null;
+
+async function fetchLive() {
+    try {
+        const res = await fetch(API_URL, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(REQUEST_DATA)
+        });
+
+        const data = await res.json();
+        const last = data.data[0];
+
+        const period = last.issueNumber;
+        const digit = Number(last.number.slice(-1));
+
+        document.getElementById("period").innerHTML = period;
+        document.getElementById("digit").innerHTML = digit;
+
+        // Big/Small
+        let bs = (digit >= 5 ? "BIG" : "SMALL");
+        document.getElementById("bigSmall").innerHTML = bs;
+
+        // Accuracy Calculation
+        if (lastPrediction !== null) {
+            total++;
+            if (
+              (lastPrediction === "BIG" && digit >= 5) ||
+              (lastPrediction === "SMALL" && digit < 5)
+            ) {
+                correct++;
+            }
+        }
+
+        let acc = total === 0 ? 0 : Math.round((correct / total) * 100);
+        document.getElementById("accuracy").innerHTML = acc + "%";
+
+        // Next Prediction (simple pattern)
+        lastPrediction = (digit >= 5 ? "SMALL" : "BIG");
+        document.getElementById("prediction").innerHTML = lastPrediction;
+
+    } catch (e) {
+        document.getElementById("prediction").innerHTML = "API Error";
+    }
+}
+
+// Auto fetch every 30 seconds
+fetchLive();
+setInterval(fetchLive, 30000);
+</script>
+
+</body>
+</html>
